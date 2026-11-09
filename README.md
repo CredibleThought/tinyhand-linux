@@ -70,6 +70,7 @@ To build and install from source instead, see [Development](#development).
 | Click | Tap (nothing underneath gets clicked) |
 | Hold and drag | Draw the current shape: ellipse, rectangle, arrow or freehand pen |
 | Hold **Shift** while dragging | Circle, square, or an arrow snapped to 45° |
+| Double-click | A quick glow or sparkle burst to say "look here" (choose in Settings or the top-bar menu) |
 | Hold **Alt** and click | Click the app underneath for real |
 | **Ctrl+Alt+X** | Clear the drawing |
 | **Esc** | Clear everything and turn the pointer off |
@@ -79,13 +80,18 @@ While the pointer is on, move to the bottom of the screen to show the toolbar.
 It has your pinned hands, a grid of all 36 hands and the laser dot, the shape
 to draw, ink colour, sound and exit. The top bar stays clickable.
 
-Settings (size, shadow, shape, fade time, ink colour, tap sound, click-through key)
+Settings (size, shadow, shape, fade time, ink colour, double-click effect, tap sound,
+click-through key)
 are in the Extensions app, or from the top-bar menu.
 
 ## Differences from the macOS app
 
-- **Scrolling** is blocked while the pointer is on. Hold Alt to scroll an app.
-- **Shapes** are new: the macOS app only draws freehand.
+- **Scrolling** passes through to the window under the pointer, but GNOME's
+  normal cursor may show briefly while you scroll. For half a second after a
+  scroll, a click reaches the app instead of tapping.
+- **Shapes** and the **double-click effect** are new: the macOS app only draws
+  freehand.
+- **Bones** is an extra hand made for this port.
 - **Sound** uses GNOME's event sounds. If taps are silent, turn on
   *Settings › Sound › Alert Sound*.
 - **Shortcuts** can only be changed with `gsettings` for now. The command is

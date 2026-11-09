@@ -24,15 +24,26 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import {Arm} from './lib/arm.js';
+import {Effects} from './lib/effects.js';
 import {Ink} from './lib/ink.js';
 import {Toolbar} from './lib/toolbar.js';
-import {INK_CHOICES, LASER, SHAPES, loadHands} from './lib/hands.js';
+import {CLICK_EFFECTS, INK_CHOICES, LASER, SHAPES, loadHands} from './lib/hands.js';
 
 const IDLE_AFTER_US = 500 * 1000;
 const IDLE_POLL_MS = 50;
 const DRAW_THRESHOLD = 4;
 const REVEAL_ON_START_MS = 3000;
 const REVEAL_ON_MONITOR_MS = 1500;
+// After a scroll, how long the catcher stays out of the way so that the
+// rest of the scroll gesture goes straight to the window underneath.
+const SCROLL_PASS_MS = 600;
+// How long to wait for the catcher to stop being picked before replaying.
+const SCROLL_REPLAY_DELAY_MS = 20;
+// A virtual device takes pointer-motion units: 10 per wheel step.
+const SCROLL_UNITS_PER_STEP = 10;
+
+// How far apart, in pixels, the two clicks of a double-click may land.
+const DOUBLE_CLICK_DISTANCE = 12;
 
 const BUTTONS_MASK = Clutter.ModifierType.BUTTON1_MASK |
     Clutter.ModifierType.BUTTON2_MASK | Clutter.ModifierType.BUTTON3_MASK;
@@ -124,13 +135,20 @@ class Controller {
         this._lastPointer = null;
         this._stillSince = 0;
         this._idlePollId = 0;
+        this._scrollPassUntil = 0;
+        this._scrollDevice = null;
+        this._scrollTimeouts = new Set();
 
         this._sound = new TapSound(assetsDir);
         this._arm = new Arm(assetsDir);
         this._ink = new Ink();
+        this._effects = new Effects();
+        this._lastClick = null;
+        this._mouseSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.peripherals.mouse'});
 
         this._visual = new Clutter.Actor({reactive: false, visible: false});
         this._visual.add_child(this._ink.actor);
+        this._visual.add_child(this._effects.actor);
         this._visual.add_child(this._arm.actor);
 
         this._catcher = new St.Widget({reactive: true, visible: false});
@@ -141,7 +159,7 @@ class Controller {
                 this._drag(...event.get_coords(), event.get_state());
             return Clutter.EVENT_PROPAGATE;
         });
-        this._catcher.connect('scroll-event', () => Clutter.EVENT_STOP);
+        this._catcher.connect('scroll-event', (_a, event) => this._onScroll(event));
 
         this._toolbar = new Toolbar({
             hands: this.hands,
@@ -192,6 +210,11 @@ class Controller {
         this._settings.set_boolean(this._soundKey, on);
     }
 
+    get clickEffect() {
+        const id = this._settings.get_string('double-click-effect');
+        return CLICK_EFFECTS.some(([e]) => e === id) ? id : 'glow';
+    }
+
     get shape() {
         const id = this._settings.get_string('draw-shape');
         return SHAPES.some(([s]) => s === id) ? id : 'pen';
@@ -231,6 +254,9 @@ class Controller {
         case 'hand-sound':
         case 'laser-sound':
             this._syncSound();
+            break;
+        case 'double-click-effect':
+            this._onActiveChanged?.();
             break;
         case 'draw-shape':
             this._toolbar.setShape(this.shape);
@@ -302,6 +328,9 @@ class Controller {
 
         this._down = null;
         this._arm.held = false;
+        this._cancelScrollPass();
+        this._lastClick = null;
+        this._effects.clear();
         this._ink.clear();
         this._toolbar.hide();
         this._catcher.hide();
@@ -363,6 +392,8 @@ class Controller {
         this._sound.play();
         this._toolbar.closeTrays();
         this._down = {x, y, button: event.get_button()};
+        if (this._isDoubleClick(event, x, y))
+            this._playClickEffect(x, y);
         this._wake();
         return Clutter.EVENT_STOP;
     }
@@ -371,6 +402,76 @@ class Controller {
         this._release();
         this._wake();
         return Clutter.EVENT_STOP;
+    }
+
+    _isDoubleClick(event, x, y) {
+        if (event.get_button() !== Clutter.BUTTON_PRIMARY) {
+            this._lastClick = null;
+            return false;
+        }
+        const time = event.get_time();
+        const last = this._lastClick;
+        const double = last !== null &&
+            time - last.time <= this._mouseSettings.get_int('double-click') &&
+            Math.hypot(x - last.x, y - last.y) <= DOUBLE_CLICK_DISTANCE;
+        // A third click starts a new pair rather than playing again.
+        this._lastClick = double ? null : {time, x, y};
+        return double;
+    }
+
+    _playClickEffect(x, y) {
+        const m = this._monitor;
+        const kind = this._settings.get_string('double-click-effect');
+        if (!m || kind === 'off')
+            return;
+        this._effects.play(kind, x - m.x, y - m.y, this._inkColor(), m.height);
+    }
+
+    // Wayland has no way to pass an event on to the window underneath, so
+    // step aside for a moment and replay the scroll with a virtual pointer.
+    // Scrolls that follow within SCROLL_PASS_MS go to the window directly.
+    _onScroll(event) {
+        if (this._down || this._ink.isDrawing)
+            return Clutter.EVENT_STOP;
+        // Clutter pairs each scroll with an emulated one; replaying the real
+        // one recreates both.
+        if (event.get_flags() & Clutter.EventFlags.POINTER_EMULATED)
+            return Clutter.EVENT_STOP;
+
+        this._scrollPassUntil = GLib.get_monotonic_time() + SCROLL_PASS_MS * 1000;
+        this._catcher.hide();
+        this._wake();
+
+        const direction = event.get_scroll_direction();
+        const source = event.get_scroll_source();
+        let replay;
+        if (direction === Clutter.ScrollDirection.SMOOTH) {
+            const [dx, dy] = event.get_scroll_delta();
+            const finish = event.get_scroll_finish_flags();
+            replay = dev => dev.notify_scroll_continuous(Clutter.CURRENT_TIME,
+                dx * SCROLL_UNITS_PER_STEP, dy * SCROLL_UNITS_PER_STEP, source, finish);
+        } else {
+            replay = dev => dev.notify_discrete_scroll(Clutter.CURRENT_TIME, direction, source);
+        }
+
+        const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, SCROLL_REPLAY_DELAY_MS, () => {
+            this._scrollTimeouts.delete(id);
+            if (this.active) {
+                this._scrollDevice ??= Clutter.get_default_backend().get_default_seat()
+                    .create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE);
+                replay(this._scrollDevice);
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+        this._scrollTimeouts.add(id);
+        return Clutter.EVENT_STOP;
+    }
+
+    _cancelScrollPass() {
+        for (const id of this._scrollTimeouts)
+            GLib.source_remove(id);
+        this._scrollTimeouts.clear();
+        this._scrollPassUntil = 0;
     }
 
     _release() {
@@ -426,7 +527,9 @@ class Controller {
             this._arm.pointerHidden = normal;
             this._cursor.hidden = !normal;
         }
-        this._catcher.visible = drawing || this._down !== null || (!interacting && !Main.overview.visible);
+        const scrolling = now < this._scrollPassUntil;
+        this._catcher.visible = drawing || this._down !== null ||
+            (!interacting && !scrolling && !Main.overview.visible);
 
         const near = this._toolbar.isNear(px, py);
         this._toolbar.setRevealed(!drawing && (near || now < this._revealUntil || this._toolbar.trayOpen));
@@ -440,7 +543,7 @@ class Controller {
                 this._drag(px, py, mods);
         }
 
-        const busy = this._down !== null || drawing || this._arm.isSettling ||
+        const busy = this._down !== null || drawing || this._arm.isSettling || scrolling ||
             now - this._stillSince < IDLE_AFTER_US || now < this._revealUntil;
         if (!busy)
             this._goIdle();
@@ -488,6 +591,7 @@ class Controller {
         Main.layoutManager.disconnect(this._monitorsId);
         this._timeline.stop();
         this._timeline = null;
+        this._scrollDevice = null;
         Main.layoutManager.removeChrome(this._catcher);
         for (const actor of this._toolbar.actors)
             Main.layoutManager.removeChrome(actor);
@@ -495,6 +599,7 @@ class Controller {
         this._catcher.destroy();
         this._arm.destroy();
         this._ink.destroy();
+        this._effects.destroy();
         this._visual.destroy();
         this._settings = null;
     }
@@ -534,6 +639,15 @@ class TinyHandIndicator extends PanelMenu.Button {
             this._shapeItems.set(id, item);
         }
         this.menu.addMenuItem(this._shapeMenu);
+
+        this._effectMenu = new PopupMenu.PopupSubMenuMenuItem('Double-click');
+        this._effectItems = new Map();
+        for (const [id, title] of CLICK_EFFECTS) {
+            const item = this._effectMenu.menu.addAction(title, () =>
+                extension.getSettings().set_string('double-click-effect', id));
+            this._effectItems.set(id, item);
+        }
+        this.menu.addMenuItem(this._effectMenu);
 
         this._soundItem = new PopupMenu.PopupSwitchMenuItem('Tap sound', controller.soundOn);
         this._soundItem.connect('toggled', (_item, on) => {
@@ -578,6 +692,10 @@ class TinyHandIndicator extends PanelMenu.Button {
         for (const [id, item] of this._shapeItems)
             item.setOrnament(id === shape ? PopupMenu.Ornament.DOT : PopupMenu.Ornament.NONE);
         this._shapeMenu.label.text = `Draw: ${SHAPES.find(([id]) => id === shape)[1]}`;
+        const effect = c.clickEffect;
+        for (const [id, item] of this._effectItems)
+            item.setOrnament(id === effect ? PopupMenu.Ornament.DOT : PopupMenu.Ornament.NONE);
+        this._effectMenu.label.text = `Double-click: ${CLICK_EFFECTS.find(([id]) => id === effect)[1]}`;
     }
 });
 

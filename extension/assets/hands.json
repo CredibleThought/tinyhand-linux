@@ -322,6 +322,20 @@
   "handMaxX": 0.65527
  },
  {
+  "id": "bones",
+  "title": "Bones",
+  "ink": "#6B7380",
+  "aspect": 0.66667,
+  "handTop": 0.07087,
+  "tip": 0.07487,
+  "wrist": 0.48047,
+  "rodEnd": 0.95182,
+  "tipX": 0.44971,
+  "rodX": 0.51367,
+  "handMinX": 0.31738,
+  "handMaxX": 0.7002
+ },
+ {
   "id": "astro",
   "title": "Astronaut",
   "ink": "#2F86F0",

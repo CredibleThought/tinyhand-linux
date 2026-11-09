@@ -31,6 +31,10 @@
       <default>'ellipse'</default>
       <summary>What dragging draws: pen, ellipse, rectangle or arrow</summary>
     </key>
+    <key name="double-click-effect" type="s">
+      <default>'glow'</default>
+      <summary>Effect played on double-click: glow, sparkle or off</summary>
+    </key>
     <key name="tap-sound" type="s">
       <default>'thock'</default>
       <summary>Tap sound: thock, click, pop, wood, boop or squeak</summary>

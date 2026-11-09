@@ -4,7 +4,7 @@ import Gtk from 'gi://Gtk';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-import {INK_CHOICES, INTERACT_KEYS, LASER, SHAPES, TAP_SOUNDS, loadHands} from './lib/hands.js';
+import {CLICK_EFFECTS, INK_CHOICES, INTERACT_KEYS, LASER, SHAPES, TAP_SOUNDS, loadHands} from './lib/hands.js';
 
 /** A combo row bound to a string setting; items are [id, title] pairs. */
 function comboRow(settings, key, title, subtitle, items) {
@@ -74,6 +74,8 @@ export default class TinyHandPreferences extends ExtensionPreferences {
         drawing.add(spinRow(s, 'fade-seconds', 'Fade after', 'Seconds; 0 keeps drawings until you clear them',
             0, 60, 0.5, 1));
         drawing.add(comboRow(s, 'ink-choice', 'Ink colour', null, INK_CHOICES.map(c => [c.id, c.title])));
+        drawing.add(comboRow(s, 'double-click-effect', 'Double-click effect', 'Uses the ink colour',
+            CLICK_EFFECTS));
         page.add(drawing);
 
         const sound = new Adw.PreferencesGroup({

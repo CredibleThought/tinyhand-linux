@@ -18,6 +18,7 @@ from pathlib import Path
 from PIL import Image
 
 # (id, title, ink colour) in upstream order; see PointerStyle.swift.
+# Hands with a source image in this repo's art/ folder use it instead of upstream's.
 PURPLE = "#8754F2"
 RED = "#FF291F"
 HANDS = [
@@ -44,6 +45,7 @@ HANDS = [
     ("lowpoly", "Low poly", PURPLE),
     ("knit", "Knit", PURPLE),
     ("skeleton", "Skeleton", "#9A5E2C"),
+    ("bones", "Bones", "#6B7380"),  # from art/, not upstream
     ("astro", "Astronaut", "#2F86F0"),
     ("space", "Space", RED),
     ("monster", "Monster", "#3E9E2E"),
@@ -58,6 +60,8 @@ HANDS = [
     ("leaf", "Leaf", "#3E9E2E"),
     ("cookie", "Gingerbread", "#9A5E2C"),
 ]
+
+ART = Path(__file__).resolve().parent.parent / "art"
 
 SOUNDS = ["thock", "click", "pop", "wood", "boop", "squeak"]
 
@@ -149,7 +153,10 @@ def main():
 
     hands = []
     for hand_id, title, ink in HANDS:
-        img = Image.open(upstream / f"hand_{hand_id}.png").convert("RGBA")
+        source = ART / f"hand_{hand_id}.png"
+        if not source.exists():
+            source = upstream / f"hand_{hand_id}.png"
+        img = Image.open(source).convert("RGBA")
         m = measure(img)
         slice_rows(img, m["handTop"], m["wrist"]).save(hands_dir / f"{hand_id}_hand.png", optimize=True)
         slice_rows(img, m["wrist"], m["rodEnd"]).save(hands_dir / f"{hand_id}_rod.png", optimize=True)

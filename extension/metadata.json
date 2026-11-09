@@ -10,6 +10,6 @@
     "50"
   ],
   "settings-schema": "org.gnome.shell.extensions.tinyhand",
-  "version-name": "0.1.0",
+  "version-name": "0.2.0",
   "url": "https://github.com/CredibleThought/tinyhand-linux"
 }

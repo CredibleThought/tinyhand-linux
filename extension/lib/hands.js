@@ -35,6 +35,12 @@ export const SHAPES = [
     ['arrow', 'Arrow'],
 ];
 
+export const CLICK_EFFECTS = [
+    ['glow', 'Glow'],
+    ['sparkle', 'Sparkle burst'],
+    ['off', 'Off'],
+];
+
 export const INTERACT_KEYS = [
     ['alt', 'Alt'],
     ['super', 'Super'],
