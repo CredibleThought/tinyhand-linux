@@ -1,0 +1,51 @@
+.tinyhand-toolbar {
+  background-color: rgba(28, 28, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  padding: 8px 10px;
+  spacing: 6px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.tinyhand-tray {
+  background-color: rgba(28, 28, 32, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  padding: 6px;
+  spacing: 2px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.tinyhand-row {
+  spacing: 2px;
+}
+
+.tinyhand-button {
+  border-radius: 10px;
+  padding: 4px;
+  min-width: 40px;
+  min-height: 40px;
+  color: #ffffff;
+}
+
+.tinyhand-button:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.tinyhand-button:checked,
+.tinyhand-button.selected {
+  background-color: rgba(255, 255, 255, 0.22);
+}
+
+.tinyhand-separator {
+  width: 1px;
+  margin: 6px 4px;
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+.tinyhand-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+}

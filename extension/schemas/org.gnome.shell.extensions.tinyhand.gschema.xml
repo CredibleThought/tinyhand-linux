@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.tinyhand" path="/org/gnome/shell/extensions/tinyhand/">
+    <key name="pointer-style" type="s">
+      <default>'lavender'</default>
+      <summary>Hand style id, or 'laser' for the laser dot</summary>
+    </key>
+    <key name="pinned-styles" type="as">
+      <default>['lavender', 'glove', 'coral', 'plush', 'robot', 'laser']</default>
+      <summary>Styles shown directly on the toolbar</summary>
+    </key>
+    <key name="pointer-size" type="d">
+      <range min="0.08" max="0.20"/>
+      <default>0.13</default>
+      <summary>Hand length as a fraction of the screen height</summary>
+    </key>
+    <key name="show-shadow" type="b">
+      <default>true</default>
+      <summary>Draw a soft shadow under the hand</summary>
+    </key>
+    <key name="fade-seconds" type="d">
+      <range min="0" max="60"/>
+      <default>3</default>
+      <summary>Seconds before a drawing fades away; 0 keeps drawings until cleared</summary>
+    </key>
+    <key name="ink-choice" type="s">
+      <default>'match'</default>
+      <summary>Ink colour id, or 'match' to follow the hand</summary>
+    </key>
+    <key name="draw-shape" type="s">
+      <default>'ellipse'</default>
+      <summary>What dragging draws: pen, ellipse, rectangle or arrow</summary>
+    </key>
+    <key name="tap-sound" type="s">
+      <default>'thock'</default>
+      <summary>Tap sound: thock, click, pop, wood, boop or squeak</summary>
+    </key>
+    <key name="hand-sound" type="b">
+      <default>true</default>
+      <summary>Play the tap sound with hands</summary>
+    </key>
+    <key name="laser-sound" type="b">
+      <default>false</default>
+      <summary>Play the tap sound with the laser dot</summary>
+    </key>
+    <key name="interact-key" type="s">
+      <default>'alt'</default>
+      <summary>Modifier that lets clicks reach apps while held: alt, super, ctrl or off</summary>
+    </key>
+    <key name="toggle-pointer" type="as">
+      <default>['&lt;Control&gt;&lt;Alt&gt;h']</default>
+      <summary>Turn the pointer on or off</summary>
+    </key>
+    <key name="clear-ink" type="as">
+      <default>['&lt;Control&gt;&lt;Alt&gt;x']</default>
+      <summary>Clear the drawing</summary>
+    </key>
+    <key name="exit-pointer" type="as">
+      <default>['Escape']</default>
+      <summary>Clear everything and turn the pointer off (only bound while the pointer is on)</summary>
+    </key>
+    <key name="hint-shown" type="b">
+      <default>false</default>
+      <summary>Whether the first-run hint was shown</summary>
+    </key>
+  </schema>
+</schemalist>
