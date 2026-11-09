@@ -15,18 +15,42 @@ code running inside GNOME Shell can, so TinyHand runs there.
 
 ## Install
 
-On the Ubuntu machine:
+On the Ubuntu machine, open a terminal and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CredibleThought/tinyhand-linux/main/install.sh | bash
+```
+
+Then log out and back in (on Wayland, GNOME only loads new extensions at login).
+A hand icon appears in the top bar.
+
+The script downloads the latest release, installs it for your user only (no
+sudo) and turns it on. Run the same command again to update. To read the script
+before running it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CredibleThought/tinyhand-linux/main/install.sh -o install.sh
+less install.sh
+bash install.sh
+```
+
+To remove TinyHand:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CredibleThought/tinyhand-linux/main/install.sh | bash -s -- --uninstall
+```
+
+### Install by hand
 
 1. Download `tinyhand@tinyhand-linux.shell-extension.zip` from the
    [latest release](https://github.com/CredibleThought/tinyhand-linux/releases/latest).
-2. Install it from a terminal, in the folder you downloaded it to:
+2. In the folder you downloaded it to, run:
 
    ```bash
    gnome-extensions install --force tinyhand@tinyhand-linux.shell-extension.zip
    ```
 
-3. Log out and back in. On Wayland, GNOME only loads new extensions at login.
-4. Turn it on:
+3. Log out and back in, then turn it on:
 
    ```bash
    gnome-extensions enable tinyhand@tinyhand-linux
@@ -34,15 +58,6 @@ On the Ubuntu machine:
 
    Or switch it on in the Extensions app (`sudo apt install gnome-shell-extension-prefs`
    if you don't have it).
-
-A hand icon appears in the top bar. To update, install a newer zip the same way
-and log out and back in.
-
-To remove it:
-
-```bash
-gnome-extensions uninstall tinyhand@tinyhand-linux
-```
 
 To build and install from source instead, see [Development](#development).
 
