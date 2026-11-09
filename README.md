@@ -17,19 +17,34 @@ code running inside GNOME Shell can, so TinyHand runs there.
 
 On the Ubuntu machine:
 
+1. Download `tinyhand@tinyhand-linux.shell-extension.zip` from the
+   [latest release](https://github.com/CredibleThought/tinyhand-linux/releases/latest).
+2. Install it from a terminal, in the folder you downloaded it to:
+
+   ```bash
+   gnome-extensions install --force tinyhand@tinyhand-linux.shell-extension.zip
+   ```
+
+3. Log out and back in. On Wayland, GNOME only loads new extensions at login.
+4. Turn it on:
+
+   ```bash
+   gnome-extensions enable tinyhand@tinyhand-linux
+   ```
+
+   Or switch it on in the Extensions app (`sudo apt install gnome-shell-extension-prefs`
+   if you don't have it).
+
+A hand icon appears in the top bar. To update, install a newer zip the same way
+and log out and back in.
+
+To remove it:
+
 ```bash
-sudo apt install gnome-shell-extension-prefs make zip
-git clone <this repo> tinyhand-linux && cd tinyhand-linux
-make install
+gnome-extensions uninstall tinyhand@tinyhand-linux
 ```
 
-Log out and back in (Wayland only loads new extensions at login), then:
-
-```bash
-make enable
-```
-
-A hand icon appears in the top bar.
+To build and install from source instead, see [Development](#development).
 
 ## Use
 
@@ -91,11 +106,26 @@ journalctl -f -o cat /usr/bin/gnome-shell
   TinyHand checkout: slices each hand into hand and rod images, measures the
   geometry into `hands.json` and makes toolbar thumbnails
 
+To build and install from source (needs `make`):
+
+```bash
+git clone https://github.com/CredibleThought/tinyhand-linux.git
+cd tinyhand-linux
+make install                       # then log out and back in, and run: make enable
+```
+
+Other targets:
+
 ```bash
 make assets UPSTREAM=../tinyhand   # regenerate assets (needs python3-pil)
 make lint                          # eslint (needs node)
 make pack                          # build dist/*.zip
 ```
+
+## Credits
+
+GNOME port by Steve Fernandes. Based on
+[TinyHand for macOS](https://github.com/nilbuild/tinyhand) by Kamran Ahmed.
 
 ## License
 

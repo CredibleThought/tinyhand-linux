@@ -2,7 +2,14 @@
   "uuid": "tinyhand@tinyhand-linux",
   "name": "TinyHand",
   "description": "A tiny hand on a stick that points at things on your screen. Click to tap, drag to draw, Esc to exit. Toggle with Ctrl+Alt+H.",
-  "shell-version": ["46", "47", "48", "49", "50"],
+  "shell-version": [
+    "46",
+    "47",
+    "48",
+    "49",
+    "50"
+  ],
   "settings-schema": "org.gnome.shell.extensions.tinyhand",
-  "version-name": "0.1.0"
+  "version-name": "0.1.0",
+  "url": "https://github.com/CredibleThought/tinyhand-linux"
 }
