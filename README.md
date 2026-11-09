@@ -34,10 +34,10 @@ less install.sh
 bash install.sh
 ```
 
-To remove TinyHand:
+To remove TinyHand and its saved settings:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CredibleThought/tinyhand-linux/main/install.sh | bash -s -- --uninstall
+curl -fsSL https://raw.githubusercontent.com/CredibleThought/tinyhand-linux/main/uninstall.sh | bash
 ```
 
 ### Install by hand

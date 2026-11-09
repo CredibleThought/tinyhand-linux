@@ -25,10 +25,15 @@ main() {
     command -v gnome-extensions >/dev/null || fail "gnome-extensions not found. TinyHand needs the GNOME desktop."
     command -v gsettings >/dev/null || fail "gsettings not found."
 
+    # Kept for older instructions; uninstall.sh does the same.
     if [ "${1:-}" = "--uninstall" ]; then
         gnome-extensions uninstall "$uuid" 2>/dev/null || true
+        rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$uuid"
         remove_from_list enabled-extensions "$uuid"
-        say "TinyHand removed. Log out and back in to clear it from the top bar."
+        remove_from_list disabled-extensions "$uuid"
+        command -v dconf >/dev/null && dconf reset -f /org/gnome/shell/extensions/tinyhand/
+        say "TinyHand is removed."
+        echo "If the hand icon is still in the top bar, log out and back in."
         return
     fi
 
